@@ -72,7 +72,9 @@ the full clone → audit → install flow.
 
 **Block regressions in CI** — this repo ships a GitHub Action
 ([`action.yml`](action.yml)) that runs the scan and uploads SARIF to code
-scanning:
+scanning. It is listed on the Marketplace as
+[**Skill Audit for Agent Files**](https://github.com/marketplace/actions/skill-audit-for-agent-files);
+the `uses:` path stays `mkfeuhrer/skill-audit`.
 
 ```yaml
 jobs:

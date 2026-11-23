@@ -172,6 +172,19 @@ check('Action installs by prefix, not npx by name', () => {
   return 'prefix install'
 })
 
+check('Action name is set and not the bare package name', () => {
+  const action = read('action.yml')
+  const match = action.match(/^name:\s*'([^']+)'/m)
+  if (!match) throw new Error('action.yml has no quoted name')
+  const name = match[1]
+  // GitHub Marketplace reserves action names globally. `skill-audit` is held
+  // by ondrej-merkun/skill-audit, so publishing under that name is rejected.
+  if (name === 'skill-audit') {
+    throw new Error("action name 'skill-audit' is taken on the Marketplace; use 'Skill Audit for Agent Files'")
+  }
+  return name
+})
+
 check('CHANGELOG has an entry for this version', () => {
   const changelog = read('CHANGELOG.md')
   if (!changelog.includes(`## [${pkg.version}]`)) {

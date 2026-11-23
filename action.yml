@@ -1,4 +1,4 @@
-name: 'skill-audit'
+name: 'Skill Audit for Agent Files'
 description: 'Static security scan of agent instruction files — SKILL.md, CLAUDE.md, AGENTS.md, .cursorrules, .windsurfrules, MCP configs'
 branding:
   icon: 'shield'

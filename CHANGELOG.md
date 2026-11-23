@@ -3,6 +3,18 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.0.3] — 2026-11-23
+
+### Changed
+
+- **The Action's display name is now "Skill Audit for Agent Files".** GitHub
+  Marketplace reserves action names globally, and `skill-audit` was already
+  claimed by `ondrej-merkun/skill-audit`, so publishing under it was rejected.
+  Nothing else moves: the repo, the `uses: mkfeuhrer/skill-audit@v1` path, the
+  installed binary and the npm package all keep their names. Only the
+  Marketplace listing and the `name:` field in `action.yml` change.
+- A release check now guards against setting the Marketplace-taken name again.
+
 ## [1.0.2] — 2026-11-23
 
 ### Changed
