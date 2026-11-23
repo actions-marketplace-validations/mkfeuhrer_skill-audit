@@ -111,7 +111,7 @@ export async function main(argv = process.argv.slice(2)) {
     inlineAllows: inlineAllows || config.inlineAllows === true,
   }
   const { files, findings, summary } = await auditTargets(targets, auditConfig)
-  process.stdout.write(format(findings, summary, { format: formatName, root: process.cwd() }))
+  process.stdout.write(format(findings, summary, { format: formatName, root: process.cwd(), filesScanned: files.length }))
 
   if (files.length === 0) process.stderr.write('skill-audit: no instruction files found\n')
 

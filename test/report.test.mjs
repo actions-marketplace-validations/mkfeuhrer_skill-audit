@@ -43,6 +43,11 @@ test('text output includes location and rule id', () => {
   assert.match(output, /1 error\(s\), 1 warning\(s\)/)
 })
 
+test('a clean scan reports the files it covered, not zero', () => {
+  const output = format([], summarize([]), { format: 'text', root: '/repo', filesScanned: 3 })
+  assert.match(output, /across 3 file\(s\)/)
+})
+
 test('json output is machine readable', () => {
   const parsed = JSON.parse(format(findings, summarize(findings), { format: 'json', root: '/repo' }))
   assert.equal(parsed.version, 1)

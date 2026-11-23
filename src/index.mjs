@@ -66,7 +66,7 @@ export function exceedsThreshold(summary, failOn) {
 
 export function format(findings, summary, options = {}) {
   const reporter = options.format || 'text'
-  const payload = { summary, findings, root: options.root || process.cwd() }
+  const payload = { summary, findings, root: options.root || process.cwd(), filesScanned: options.filesScanned }
   if (reporter === 'json') return formatJson(payload)
   if (reporter === 'sarif') return formatSarif(payload)
   if (reporter === 'markdown') return formatMarkdown(payload)
