@@ -83,6 +83,8 @@ test('kind detection covers skills, rules and mcp configs', () => {
   assert.equal(parseInstructionFile('body', '/tmp/x/.clinerules/tests.md').kind, 'cline-rules')
   assert.equal(parseInstructionFile('body', '/tmp/x/.github/copilot-instructions.md').kind, 'copilot')
   assert.equal(parseInstructionFile('body', '/tmp/x/.cursor/rules/tests.mdc').kind, 'cursor-rules')
+  assert.equal(parseInstructionFile('body', '/tmp/x/.cursor/tests.mdc').kind, 'cursor-rules')
+  assert.equal(parseInstructionFile('body', '/tmp/x/rules/nextjs.mdc').kind, 'cursor-rules')
   assert.equal(parseInstructionFile('{"mcpServers":{}}', '/tmp/x/mcp.json').kind, 'mcp')
 })
 

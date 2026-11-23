@@ -195,7 +195,7 @@ function kindOf(filePath, raw) {
   const lower = basename(filePath).toLowerCase()
   if (INSTRUCTION_NAMES.has(lower)) return INSTRUCTION_NAMES.get(lower)
   const parts = filePath.split(sep)
-  if (lower.endsWith('.mdc') && parts.includes('.cursor')) return 'cursor-rules'
+  if (lower.endsWith('.mdc')) return 'cursor-rules'
   if (lower === 'copilot-instructions.md' && parts.includes('.github')) return 'copilot'
   if (lower.endsWith('.md') && parts.includes('.windsurf')) return 'windsurf-rules'
   if (lower.endsWith('.md') && parts.includes('.clinerules')) return 'cline-rules'
