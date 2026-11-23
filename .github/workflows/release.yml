@@ -2,8 +2,15 @@ name: release
 
 on:
   push:
-    tags: ['v*']
+    # Only full version tags (v1.2.3). A floating `v1` tag exists for the
+    # Action reference, not a release, and it used to re-trigger this workflow.
+    # These are glob patterns, not regex.
+    tags: ['v[0-9]*.[0-9]*.[0-9]*']
   workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   publish:
@@ -18,7 +25,24 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org
       - run: node --test test/*.test.mjs
-      # zero runtime dependencies: nothing to build or install before publish
-      - run: npm publish --access public --provenance
+
+      # Tags can point at a commit whose version is already on the registry
+      # (a manual publish, a re-tag, or a floating tag). Publishing again would
+      # fail with a 403, so treat that as a no-op success instead of a red X.
+      - id: published
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if npm view "@mkfeuhrer/skill-audit@$version" version >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "@mkfeuhrer/skill-audit@$version is already published; skipping."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Prefer trusted publishing (OIDC) when the package is configured for it:
+      # no long-lived token to leak. Falls back to NPM_TOKEN if that secret is
+      # set instead. Zero runtime dependencies, so nothing to install or build.
+      - if: steps.published.outputs.exists == 'false'
+        run: npm publish --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
