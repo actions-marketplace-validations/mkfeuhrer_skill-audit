@@ -2,8 +2,8 @@
 
 <p align="center">
   <a href="https://github.com/mkfeuhrer/skill-audit/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/mkfeuhrer/skill-audit/ci.yml?label=ci" alt="ci"></a>
-  <a href="https://www.npmjs.com/package/skill-audit"><img src="https://img.shields.io/npm/v/skill-audit" alt="npm version"></a>
-  <a href="https://www.npmjs.com/package/skill-audit"><img src="https://img.shields.io/npm/dm/skill-audit" alt="npm downloads"></a>
+  <a href="https://www.npmjs.com/package/@mkfeuhrer/skill-audit"><img src="https://img.shields.io/npm/v/@mkfeuhrer/skill-audit" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@mkfeuhrer/skill-audit"><img src="https://img.shields.io/npm/dm/@mkfeuhrer/skill-audit" alt="npm downloads"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="license"></a>
   <img src="https://img.shields.io/badge/runtime%20dependencies-0-success" alt="zero runtime dependencies">
 </p>
@@ -29,10 +29,10 @@ review layer. It needs one:
 
 skill-audit is the missing gate: offline, deterministic, **zero runtime
 dependencies** — the code you read here is byte-identical to the code that
-runs, and `npx skill-audit` executes with nothing to install.
+runs, and `npx @mkfeuhrer/skill-audit` executes with nothing to install.
 
 ```console
-$ npx skill-audit ~/.claude/skills
+$ npx @mkfeuhrer/skill-audit ~/.claude/skills
 error   skills/alias-setup/SKILL.md:9:1   fs/wide-write
         Writes outside the project tree (shell config, SSH, or system paths).
 error   skills/pinned-fetch/SKILL.md:11:1  exec/curl-pipe-sh
@@ -47,9 +47,13 @@ $ echo $?
 1
 ```
 
-> **Install:** `npx skill-audit ~/.claude/skills`. Runs offline, installs
+> **Install:** `npx @mkfeuhrer/skill-audit ~/.claude/skills`. Runs offline, installs
 > nothing beyond the package, and needs no API key. Pin a version in CI with
-> `npx skill-audit@1.0.0` for reproducibility.
+> `npx @mkfeuhrer/skill-audit@1.0.0` for reproducibility.
+>
+> The package is scoped because npm rejects the unscoped name as too similar to
+> an existing `skillaudit` package. The installed binary is still plain
+> `skill-audit` after `npm i -g @mkfeuhrer/skill-audit`.
 
 ## Governance: block and report
 
@@ -58,9 +62,9 @@ $ echo $?
 **Gate an install before the skill enters your agent's context:**
 
 ```shell
-npx skill-audit ~/.claude/skills                 # audit everything installed
-npx skill-audit ./skills --fail-on warning       # warnings block, not just errors
-npx skill-audit .                                # audit this repo's agent files
+npx @mkfeuhrer/skill-audit ~/.claude/skills                 # audit everything installed
+npx @mkfeuhrer/skill-audit ./skills --fail-on warning       # warnings block, not just errors
+npx @mkfeuhrer/skill-audit .                                # audit this repo's agent files
 ```
 
 Non-zero exit = do not install (or remove). `examples/install-gate.sh` wraps
@@ -90,7 +94,7 @@ Or inline, without the Action:
 ```yaml
 - uses: actions/setup-node@v7
   with: { node-version: 22 }
-- run: npx skill-audit . --format sarif --fail-on warning > skill-audit.sarif
+- run: npx @mkfeuhrer/skill-audit . --format sarif --fail-on warning > skill-audit.sarif
 - uses: github/codeql-action/upload-sarif@v4
   if: always()
   with: { sarif_file: skill-audit.sarif }

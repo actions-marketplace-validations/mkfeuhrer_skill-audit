@@ -18,7 +18,7 @@ echo "==> cloning ${repo} (shallow, read-only)"
 git clone --quiet --depth 1 "https://github.com/${repo}.git" "$tmp/skill"
 
 echo "==> auditing"
-npx skill-audit "$tmp/skill" --fail-on error
+npx @mkfeuhrer/skill-audit "$tmp/skill" --fail-on error
 
 echo "==> no blocking findings in ${repo} — safe to install:"
 echo "    npx skills add ${repo}"
