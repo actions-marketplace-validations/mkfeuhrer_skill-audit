@@ -2,6 +2,8 @@
 
 <p align="center">
   <a href="https://github.com/mkfeuhrer/skill-audit/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/mkfeuhrer/skill-audit/ci.yml?label=ci" alt="ci"></a>
+  <a href="https://www.npmjs.com/package/skill-audit"><img src="https://img.shields.io/npm/v/skill-audit" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/skill-audit"><img src="https://img.shields.io/npm/dm/skill-audit" alt="npm downloads"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="license"></a>
   <img src="https://img.shields.io/badge/runtime%20dependencies-0-success" alt="zero runtime dependencies">
 </p>
@@ -45,9 +47,9 @@ $ echo $?
 1
 ```
 
-> **Publishing note:** the npm release is being finalized. Until the package
-> lands on the registry, run from a checkout:
-> `node bin/skill-audit.mjs ~/.claude/skills`.
+> **Install:** `npx skill-audit ~/.claude/skills`. Runs offline, installs
+> nothing beyond the package, and needs no API key. Pin a version in CI with
+> `npx skill-audit@1.0.0` for reproducibility.
 
 ## Governance: block and report
 
