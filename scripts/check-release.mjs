@@ -158,6 +158,20 @@ check('Action does not parse .sarif with require()', () => {
   return 'readFileSync'
 })
 
+check('Action installs by prefix, not npx by name', () => {
+  const action = read('action.yml')
+  // `npx <pkg>` resolves a package whose name matches the current repo, which
+  // shadowed the registry build and produced exit 127 when the Action ran in
+  // its own repository. Installing to a throwaway prefix is deterministic.
+  if (/npx\s+--yes\s+"?@mkfeuhrer\/skill-audit/.test(action)) {
+    throw new Error('Action uses npx by package name; install to --prefix and call the bin directly')
+  }
+  if (!/npm install --prefix/.test(action)) {
+    throw new Error('Action should install with `npm install --prefix <dir>`')
+  }
+  return 'prefix install'
+})
+
 check('CHANGELOG has an entry for this version', () => {
   const changelog = read('CHANGELOG.md')
   if (!changelog.includes(`## [${pkg.version}]`)) {

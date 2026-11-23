@@ -35,8 +35,14 @@ runs:
       continue-on-error: true
       run: |
         set +e
-        # The package is scoped because npm rejects the unscoped name.
-        npx --yes "@mkfeuhrer/skill-audit@${{ inputs.version }}" ${{ inputs.paths }} \
+        # Install into a throwaway prefix rather than relying on `npx <name>`.
+        # npx resolves a package name that matches the current repo, which
+        # shadowed the registry build and produced "skill-audit: not found"
+        # (exit 127) when this Action ran inside its own repository.
+        prefix="$RUNNER_TEMP/skill-audit-${{ inputs.version }}"
+        npm install --prefix "$prefix" --no-save --no-fund --no-audit \
+          "@mkfeuhrer/skill-audit@${{ inputs.version }}"
+        "$prefix/node_modules/.bin/skill-audit" ${{ inputs.paths }} \
           --fail-on "${{ inputs.fail-on }}" \
           --format sarif > skill-audit.sarif
         echo "scan_exit=$?" >> "$GITHUB_OUTPUT"
