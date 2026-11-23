@@ -17,13 +17,22 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # Required for npm trusted publishing (OIDC). No long-lived token is
+      # stored: the runner exchanges a short-lived OIDC token for publish
+      # rights, scoped to this workflow and unreusable elsewhere.
       id-token: write
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org
+          # Never cache in a release build; a poisoned cache could alter what ships.
+          package-manager-cache: false
+
+      # Trusted publishing needs npm CLI >= 11.5.1.
+      - run: npm install -g npm@latest
+
       - run: node --test test/*.test.mjs
 
       # Tags can point at a commit whose version is already on the registry
@@ -39,10 +48,8 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      # Prefer trusted publishing (OIDC) when the package is configured for it:
-      # no long-lived token to leak. Falls back to NPM_TOKEN if that secret is
-      # set instead. Zero runtime dependencies, so nothing to install or build.
+      # No NODE_AUTH_TOKEN: an empty one makes npm fall back to token auth and
+      # fail with ENEEDAUTH. Trusted publishing authenticates via OIDC, and
+      # npm generates provenance automatically for public repos.
       - if: steps.published.outputs.exists == 'false'
-        run: npm publish --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish
