@@ -8,10 +8,15 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         node: [20, 22, 24]
     steps:
@@ -22,6 +27,28 @@ jobs:
       # zero runtime dependencies: tests run with no npm install
       - run: node --test test/*.test.mjs
       - run: node bin/skill-audit.mjs test/fixtures --format text --fail-on none
+
+  release-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      # package name/scope, bin path + exec bit, files list, rule docs, README
+      # rule count, unscoped install commands, Action gate wiring, CHANGELOG.
+      - run: npm run check:release
+      # The CLI must fail on a real finding and pass on a clean tree. This is
+      # the contract the Action and every user's CI depend on.
+      - name: gate fails on a malicious fixture
+        run: |
+          if node bin/skill-audit.mjs test/fixtures/malicious --fail-on error > /dev/null; then
+            echo "expected a non-zero exit on the malicious corpus"; exit 1
+          fi
+      - name: gate passes on a clean file
+        run: |
+          mkdir -p /tmp/clean && printf '# Fine\n\nJust prose.\n' > /tmp/clean/SKILL.md
+          node bin/skill-audit.mjs /tmp/clean --fail-on warning
 
   typecheck:
     runs-on: ubuntu-latest
@@ -50,3 +77,36 @@ jobs:
         if: always()
         with:
           sarif_file: skill-audit.sarif
+
+  action:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      # The Action is what most people will actually run, so test it as a
+      # consumer would: a purpose-built fixture tree, both gates.
+      - name: Action fails on a dirty tree
+        id: dirty
+        continue-on-error: true
+        uses: ./
+        with:
+          paths: test/fixtures/malicious
+          fail-on: error
+          version: '1'
+          upload-sarif: 'false'
+
+      - name: Action passed a dirty tree (bug)
+        if: steps.dirty.outcome != 'failure'
+        run: |
+          echo "the Action did not fail on the malicious corpus"
+          exit 1
+
+      - name: Action passes a clean tree
+        uses: ./
+        with:
+          paths: test/fixtures/benign
+          fail-on: error
+          version: '1'
+          upload-sarif: 'false'

@@ -14,9 +14,11 @@ inputs:
     required: false
     default: 'error'
   version:
-    description: 'skill-audit version to run (pin for reproducible CI)'
+    description: 'skill-audit version to run. A major range picks up fixes; pin an exact version to freeze.'
     required: false
-    default: 'latest'
+    # A major range, not "latest": running "latest" inside someone else's CI is
+    # the supply-chain risk this tool exists to flag.
+    default: '1'
   upload-sarif:
     description: 'Upload SARIF to GitHub code scanning (job needs security-events: write)'
     required: false
@@ -27,13 +29,64 @@ runs:
   steps:
     - name: Run skill-audit
       shell: bash
+      # continue-on-error so a failing scan still reaches the SARIF upload and
+      # the verdict step. The gate itself is enforced by the last step, because
+      # in a composite action the last step decides the job result.
+      continue-on-error: true
       run: |
-        npx --yes "skill-audit@${{ inputs.version }}" ${{ inputs.paths }} \
+        set +e
+        # The package is scoped because npm rejects the unscoped name.
+        npx --yes "@mkfeuhrer/skill-audit@${{ inputs.version }}" ${{ inputs.paths }} \
           --fail-on "${{ inputs.fail-on }}" \
           --format sarif > skill-audit.sarif
-        node -e "const s=require('./skill-audit.sarif');const r=s.runs[0].results.length;console.log('skill-audit: '+r+' finding(s)');process.exit(0)"
+        echo "scan_exit=$?" >> "$GITHUB_OUTPUT"
+      id: scan
+
+    - name: Summarize findings
+      if: always()
+      shell: bash
+      run: |
+        if [ -f skill-audit.sarif ] && [ -s skill-audit.sarif ]; then
+          # readFile+JSON.parse, not require(): require() only parses .json as
+          # JSON and throws on a .sarif extension.
+          node -e "
+            const fs = require('node:fs')
+            const s = JSON.parse(fs.readFileSync('skill-audit.sarif', 'utf8'))
+            const r = s.runs?.[0]?.results ?? []
+            const counts = r.reduce((acc, x) => {
+              const lvl = x.level || 'warning'
+              acc[lvl] = (acc[lvl] || 0) + 1
+              return acc
+            }, {})
+            const parts = Object.entries(counts).map(([k, v]) => v + ' ' + k)
+            console.log('skill-audit: ' + (parts.length ? parts.join(', ') : 'no findings'))
+          "
+        fi
+
     - name: Upload SARIF
-      if: ${{ inputs.upload-sarif == 'true' }}
+      # always(): upload the findings that failed the gate. Without this the
+      # report is lost exactly when it matters.
+      if: always() && inputs.upload-sarif == 'true'
       uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: skill-audit.sarif
+
+    - name: Enforce the gate
+      shell: bash
+      # Last step decides the job result, which is how the gate survives
+      # continue-on-error above.
+      run: |
+        code="${{ steps.scan.outputs.scan_exit }}"
+        if [ "${{ inputs.fail-on }}" = "none" ]; then
+          echo "fail-on: none — not failing the job"
+          exit 0
+        fi
+        if [ -z "$code" ]; then
+          echo "skill-audit did not report an exit code; treating as failure"
+          exit 1
+        fi
+        if [ "$code" != "0" ]; then
+          echo "skill-audit found issues at or above '${{ inputs.fail-on }}' (exit $code)"
+          exit "$code"
+        fi
+        echo "skill-audit: clean"

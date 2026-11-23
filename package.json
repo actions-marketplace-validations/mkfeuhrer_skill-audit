@@ -20,7 +20,10 @@
   },
   "scripts": {
     "test": "node --test test/*.test.mjs",
-    "typecheck": "tsc -p jsconfig.json"
+    "typecheck": "tsc -p jsconfig.json",
+    "check:release": "node scripts/check-release.mjs",
+    "check": "node scripts/check-release.mjs && node --test test/*.test.mjs && tsc -p jsconfig.json",
+    "prepublishOnly": "npm run check:release && npm test"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
