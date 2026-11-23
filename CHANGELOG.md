@@ -3,6 +3,37 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.0.1] — 2026-11-23
+
+### Fixed
+
+- **The GitHub Action could not run.** It invoked `npx skill-audit@…`, the
+  unscoped name, which does not exist on the registry (the package publishes
+  as `@mkfeuhrer/skill-audit`). It also resolved by name, which inside a repo
+  of the same name shadowed the registry build and failed with exit 127. The
+  Action now installs to a throwaway `--prefix` and invokes the bin directly.
+- **The Action lost its own findings.** The SARIF upload step had no
+  `if: always()`, and the scan step's non-zero exit skipped it — so the report
+  was dropped exactly when it mattered. The gate now lives in a final step, so
+  `continue-on-error` can let the upload run without silencing the gate.
+- Prepared `.sarif` files are read with `readFileSync` + `JSON.parse`;
+  `require()` rejects a non-`.json` extension.
+- The Action's `version` input defaulted to `latest`. It now defaults to the
+  major range `1`; running `latest` inside someone else's CI is the
+  supply-chain risk this tool exists to flag.
+
+### Added
+
+- `npm run check:release` (`scripts/check-release.mjs`): 15 invariants covering
+  package scope and visibility, bin path and exec bit, shipped files, zero
+  runtime dependencies, rule documentation, README rule count, unscoped install
+  commands, Action wiring, and a CHANGELOG entry for the current version.
+- `prepublishOnly` runs the release checks and the test suite, so a broken
+  tarball cannot reach the registry.
+- CI gains a `release-checks` job, a gate-fails/gate-passes contract check, and
+  an `action` job that runs the Action itself against the malicious and benign
+  fixture trees.
+
 ## [1.0.0] — 2026-11-01
 
 ### Added
