@@ -3,6 +3,30 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.1.0] — 2026-11-23
+
+### Fixed
+
+- **`egress/env-interpolated-url` no longer fires on ordinary URL-building
+  code.** Validating against seven public corpora showed every error-level
+  finding on anthropics/claude-code, modelcontextprotocol/servers and
+  obra/superpowers was a variable interpolated into the *path* of a literal
+  host — `https://github.com/$REPO/issues/$dup`. A `--fail-on error` gate
+  failed on the most trusted repos in the ecosystem. The rule now fires only
+  when the hostname itself begins with an interpolation (a dynamic
+  destination, any name) or when a secret-shaped name (KEY/TOKEN/SECRET/...)
+  appears anywhere in the URL. Messages now name only the flagged values.
+- **Cursor `.mdc` rule files are collected from any directory**, not just
+  `.cursor/`. The 41k-star PatrickJS/awesome-cursorrules catalog — 257 rule
+  files — previously scanned as "no instruction files found".
+
+### Changed
+
+- Scanner behaviour: repos that were clean but noisy at error level now scan
+  clean (obra/superpowers 4→0 errors; modelcontextprotocol/servers 7→0;
+  anthropics/claude-code 1→0). The malicious exfiltration fixture
+  (`https://${COLLECTOR_HOST}/ingest?key=${API_KEY}`) still fires.
+
 ## [1.0.3] — 2026-11-23
 
 ### Changed
