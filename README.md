@@ -49,7 +49,7 @@ $ echo $?
 
 > **Install:** `npx @mkfeuhrer/skill-audit ~/.claude/skills`. Runs offline, installs
 > nothing beyond the package, and needs no API key. Pin a version in CI with
-> `npx @mkfeuhrer/skill-audit@1.0.0` for reproducibility.
+> `npx @mkfeuhrer/skill-audit@1` for reproducibility.
 >
 > The package is scoped because npm rejects the unscoped name as too similar to
 > an existing `skillaudit` package. The installed binary is still plain
@@ -86,7 +86,7 @@ jobs:
         with:
           paths: .
           fail-on: warning
-          version: 1.0.0   # pin for reproducible CI
+          version: 1   # major range: fixes without surprise majors
 ```
 
 Or inline, without the Action:
@@ -106,7 +106,7 @@ users get the gate at commit time via [`.pre-commit-hooks.yaml`](.pre-commit-hoo
 ```yaml
 repos:
   - repo: https://github.com/mkfeuhrer/skill-audit
-    rev: v1.0.0
+    rev: v1.0.1
     hooks:
       - id: skill-audit
 ```

@@ -3,6 +3,17 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.0.2] — 2026-11-23
+
+### Changed
+
+- Documentation version pins no longer rot. The README told readers to pin
+  `@1.0.0` in CI and `v1.0.0` in pre-commit, both of which predate the Action
+  fixes. It now recommends the major range `@1` / `v1.0.1`, which is also what
+  the Action's own `version` input defaults to.
+- Builds published from CI now carry npm provenance. 1.0.0 and 1.0.1 were
+  published from a local CLI, so neither has an attestation.
+
 ## [1.0.1] — 2026-11-23
 
 ### Fixed

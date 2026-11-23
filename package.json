@@ -1,6 +1,6 @@
 {
   "name": "@mkfeuhrer/skill-audit",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Static security scanner for AI agent instruction files: SKILL.md, CLAUDE.md, AGENTS.md, .cursorrules, .windsurfrules and MCP configs.",
   "type": "module",
   "license": "MIT",
